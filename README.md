@@ -9,3 +9,4 @@
 
 ## To-do List
 - Add support for substitutions
+- Allow users to directly add ingredients and meal recipes to the database
