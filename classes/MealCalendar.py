@@ -69,24 +69,30 @@ class MealCalendar:
         for dailyPlan in self.weeklyMealPlan:
             for meal in dailyPlan:  
                 rawIngredientsList.append(self.Database.sqlQueryTotalIngredients(self.Database.sqlQueryRecipeID(meal), 1))
-        
+
         # For each ingredient in rawIngredientsList, add the ingredient and its unit to unitIngredientsList if it does not already exist
         # In addition, record its initial quantity
         # If the same ingredient's unit comes up again in rawIngredientsList, only add to quantity in quantityIngredientsList
         # Honestly this would've been easier if I just reordered the list elements or used SQLite
         for x in rawIngredientsList:
             for y in x:
-                print("y is:", y)
-                print(y)
                 if [y[0], y[2]] not in unitIngredientsList:
                     unitIngredientsList.append([y[0], y[2]])
                     quantityIngredientsList.append(y[1])
-                    print("Found unique ingredient unit:", y[0], y[2])
+                    # print("Found unique ingredient unit:", y[0], y[2])
                 else:
-                    print("Found duplicate.")
+                    # print("Found duplicate.")
                     quantityIngredientsList[unitIngredientsList.index([y[0], y[2]])] += y[1]
-                    print("New quantity is", quantityIngredientsList[unitIngredientsList.index([y[0], y[2]])])
+                    # print("New quantity is", quantityIngredientsList[unitIngredientsList.index([y[0], y[2]])])
+        
+        summedIngredientsList = []
+        y = 0
+        for x in unitIngredientsList:
+            print(x)
+            summedIngredientsList.append([x[0], quantityIngredientsList[y], x[1]])
+            y += 1
 
+        return summedIngredientsList
 # Debug
 # myMeals = MealCalendar()
 # myMeals.addMealToDay("monday", 1)
@@ -94,4 +100,6 @@ class MealCalendar:
 # myMeals.addMealToDay("tuesday", 1)
 # myMeals.addMealToDay("monday", 2)
 # myMeals.printWeeklyMealPlan()
-# print(myMeals.sumIngredientsForWeek())
+
+# for x in myMeals.sumIngredientsForWeek():
+#     print(x)
