@@ -1,9 +1,14 @@
 import sqlite3 as sqlite
 
+# Establish a Connection object that represents the database
 con = sqlite.connect("databases/main.db")
+
+# Create a Cursor object in order to perform SQLite commands
 cur = con.cursor()
 
-res = cur.execute("SELECT Recipes.Name, Ingredients.Ingredient, Quantity, Unit FROM Recipes_Ingredients_Quantities INNER JOIN Recipes ON Recipes_Ingredients_Quantities.Recipe_ID = Recipes.Meal_ID INNER JOIN Ingredients ON Recipes_Ingredients_Quantities.Ingredient_ID = Ingredients.Ingredient_ID")
-# print(res.fetchall())
-listOfIngredients = res.fetchall()
-print(listOfIngredients[1])
+# Generate list of recipe's ingredients and required quantities
+ingredientQuantities = cur.execute("")
+
+ingredientQuantities = ingredientQuantities.fetchall()
+
+print(ingredientQuantities[1])
