@@ -6,7 +6,30 @@
   - Supports meal recipes that have multiple portions
 - View a weekly grocery shopping list of ingredients
 - SQLite database stores ingredients and available recipes
+- Allow users to take stock of what's in their fridge and have shopping list update accordingly
 
 ## To-do List
 - Add support for substitutions
 - Allow users to directly add ingredients and meal recipes to the database
+- Recommend recipes based off of what's currently in the fridge
+
+## Meal Recipes
+- Meal ID
+- Name
+- List of Ingredients
+<!-- SELECT Recipes.Name, Ingredients.Ingredient, Quantity, Unit
+FROM Recipes_Ingredients_Quantities
+INNER JOIN Recipes ON Recipes_Ingredients_Quantities.Recipe_ID = Recipes.Meal_ID
+INNER JOIN Ingredients ON Recipes_Ingredients_Quantities.Ingredient_ID = Ingredients.Ingredient_ID; -->
+- Portion Size
+
+## Ingredients
+- Ingredient ID
+- Ingredient Name
+
+## Recipe Ingredients Quantity
+- Recipe Ingredient ID
+- Recipe (repeating)
+- Ingredient
+- Quantity
+- Unit
