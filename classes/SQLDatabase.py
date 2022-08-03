@@ -27,6 +27,13 @@ class SQLDatabase:
         res = self.cur.execute("SELECT Meal_ID FROM Recipes WHERE Name = \"" + recipeName + "\"")
         return res.fetchone()
 
+    def sqlQueryPortionSize(self, mealID):
+        self.con.row_factory = lambda cursor, row: row[0]
+        self.cur = self.con.cursor()
+
+        res = self.cur.execute("SELECT \"Portion Size\" FROM Recipes WHERE Meal_ID = " + mealID)
+        return res.fetchone()
+
     def sqlQueryTotalIngredients(self, recipeID, pyMealQuantity):
         self.con.row_factory = None
         self.cur = self.con.cursor()
@@ -38,3 +45,11 @@ class SQLDatabase:
         WHERE Recipe_ID = """ + str(recipeID) +
         " GROUP BY Ingredient, Unit;")
         return res.fetchall()
+
+    def sqlQueryAllRecipes(self):
+        self.con.row_factory = None
+        self.cur = self.con.cursor()
+
+        res = self.cur.execute("SELECT \"Meal_ID\", Name FROM Recipes")
+        for x in res:
+            print(f"ID: {x[0]}, {x[1]}")

@@ -1,3 +1,6 @@
+from ast import Continue
+from enum import unique
+from unittest import skip
 from SQLDatabase import SQLDatabase
 
 class MealCalendar:
@@ -12,7 +15,8 @@ class MealCalendar:
         self.sundayMeals = []
 
         # Create cumulative list combining all meals from every day of the week
-        self.weeklyMealPlan = [self.mondayMeals, self.tuesdayMeals, self.wednesdayMeals, self.thursdayMeals, self.fridayMeals, self.saturdayMeals, self.sundayMeals]
+        self.weeklyMealPlan = [self.mondayMeals, self.tuesdayMeals, self.wednesdayMeals, self.thursdayMeals,
+            self.fridayMeals, self.saturdayMeals, self.sundayMeals]
         
         # Create list of days for indexing through each day of the week
         self.daysOfTheWeek = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
@@ -24,39 +28,52 @@ class MealCalendar:
         # Prints meal plan for each day of the week
         print("The current meal plan for the week is: ")
         for day in self.daysOfTheWeek:
-            print(f'{day: <15} {", ".join(self.weeklyMealPlan[self.daysOfTheWeek.index(day)])}')
+            print(f'{day.capitalize(): <15} {", ".join(self.weeklyMealPlan[self.daysOfTheWeek.index(day)])}')
 
-    def addMealToDay(self, day, mealID):
+    def addMealToDay(self):
         # Adds a meal to a day in the weekly meal plan
-        day = day.lower()
+        self.Database.sqlQueryAllRecipes()
 
-        # Check if input is actually valid
-        mealName = self.Database.sqlQueryRecipeName(mealID)
-        if str(mealName) == "None":
-            print("No valid meal found.")
+        while True:
+            mealID = input("Enter a meal ID from the selection above: ")
+            mealName = self.Database.sqlQueryRecipeName(mealID)
+            if str(mealName) == "None":
+                print("No valid meal found.")
+            else:
+                break
 
-        elif day not in self.daysOfTheWeek:
-            print("Not a valid day.")
+        mealPortion = self.Database.sqlQueryPortionSize(mealID)
+        print(f"{mealName} has {mealPortion} portions.")
 
-        # In order to simplify things down to one line of code, append meals to a day's list of meals by indexing the approriate day within weeklyMealPlan
-        else:
+        while mealPortion >= 1:
+            self.printWeeklyMealPlan()
+            day = input(f"Choose a day to eat this ({mealPortion} left): ")
+
+            while day not in self.daysOfTheWeek:
+                print("No valid day found.")
+                day = input(f"Choose a day to eat this ({mealPortion} left): ")
+
+            day = day.lower()
+
+            # In order to simplify things down to one line of code, append meals to a day's list of meals by indexing
+            # the approriate day within weeklyMealPlan
             self.weeklyMealPlan[self.daysOfTheWeek.index(day)].append(self.Database.sqlQueryRecipeName(mealID))
+            mealPortion -= 1
     
-    def removeMealFromDay(self, day, mealID):
-        # Removes a meal to a day in the weekly meal plan
-        day = day.lower()
-
-        # Check if input is actually valid
-        mealName = self.Database.sqlQueryRecipeName(mealID)
-        if str(mealName) == "None":
-            print("No valid meal found.")
-
-        elif day not in self.daysOfTheWeek:
-            print("Not a valid day.")
-
-        # In order to simplify things down to one line of code, append meals to a day's list of meals by indexing the approriate day within weeklyMealPlan
-        else:
-            self.weeklyMealPlan[self.daysOfTheWeek.index(day)].remove(self.Database.sqlQueryRecipeName(mealID))
+    def removeMealFromDay(self):
+        # Removes a meal from a day
+        self.printWeeklyMealPlan()
+        day = input("Choose a day: ").lower()
+        while day not in self.daysOfTheWeek:
+            print("No valid day found.")
+            day = input("Choose a day: ")
+        
+        mealList = list(enumerate(self.weeklyMealPlan[self.daysOfTheWeek.index(day)], 1))
+        for x in mealList:
+            print(x)
+        
+        userInput = input("Enter a meal's number to remove it: ")
+        self.weeklyMealPlan[self.daysOfTheWeek.index(day)].pop(int(userInput) - 1)
     
     def sumIngredientsForWeek(self):
         # Create 3 lists, one for storing the raw SQLite data,
@@ -64,42 +81,23 @@ class MealCalendar:
         rawIngredientsList = []
         unitIngredientsList = []
         quantityIngredientsList = []
+        mealList = []
+        mealCountPortions = []
 
         # For each daily meal plan in the week, retrieve it's required ingredients list and add it to rawIngredientsList
         for dailyPlan in self.weeklyMealPlan:
-            for meal in dailyPlan:  
-                rawIngredientsList.append(self.Database.sqlQueryTotalIngredients(self.Database.sqlQueryRecipeID(meal), 1))
+            for meal in dailyPlan:
+                mealList.append(meal)
+    
+        uniqueMealList = set(mealList)
+        for x in uniqueMealList:
+            mealCountPortions.append([x, mealList.count(x), self.Database.sqlQueryPortionSize(str(self.Database.sqlQueryRecipeID(x)))])
 
-        # For each ingredient in rawIngredientsList, add the ingredient and its unit to unitIngredientsList if it does not already exist
-        # In addition, record its initial quantity
-        # If the same ingredient's unit comes up again in rawIngredientsList, only add to quantity in quantityIngredientsList
-        # Honestly this would've been easier if I just reordered the list elements or used SQLite
+        for x in mealCountPortions:
+            if x[1] >= x[2]:
+                x[1] /= x[2]
+            rawIngredientsList.append(self.Database.sqlQueryTotalIngredients(self.Database.sqlQueryRecipeID(x[0]), x[1]))
+
         for x in rawIngredientsList:
             for y in x:
-                if [y[0], y[2]] not in unitIngredientsList:
-                    unitIngredientsList.append([y[0], y[2]])
-                    quantityIngredientsList.append(y[1])
-                    # print("Found unique ingredient unit:", y[0], y[2])
-                else:
-                    # print("Found duplicate.")
-                    quantityIngredientsList[unitIngredientsList.index([y[0], y[2]])] += y[1]
-                    # print("New quantity is", quantityIngredientsList[unitIngredientsList.index([y[0], y[2]])])
-        
-        summedIngredientsList = []
-        y = 0
-        for x in unitIngredientsList:
-            print(x)
-            summedIngredientsList.append([x[0], quantityIngredientsList[y], x[1]])
-            y += 1
-
-        return summedIngredientsList
-# Debug
-# myMeals = MealCalendar()
-# myMeals.addMealToDay("monday", 1)
-# myMeals.addMealToDay("monday", 1)
-# myMeals.addMealToDay("tuesday", 1)
-# myMeals.addMealToDay("monday", 2)
-# myMeals.printWeeklyMealPlan()
-
-# for x in myMeals.sumIngredientsForWeek():
-#     print(x)
+                print(y)
